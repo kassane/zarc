@@ -26,7 +26,7 @@ pub fn build(b: *std.build.Builder) void {
         exe.addAnonymousModule("zarc", .{
             .source_file = .{ .path = "src/main.zig" },
         });
-        const install_exe_step = b.addInstallArtifact(exe);
+        const install_exe_step = b.addInstallArtifact(exe, .{});
         b.getInstallStep().dependOn(&install_exe_step.step);
 
         const run_exe = b.addRunArtifact(exe);

@@ -122,15 +122,15 @@ pub const Header = struct {
     longlink: ?[]const u8 = null,
 
     pub fn asOld(self: Header) *const OldHeader {
-        return @as(*const OldHeader, &self.buffer);
+        return @as(*const OldHeader, @ptrCast(&self.buffer));
     }
 
     pub fn asUstar(self: Header) *const UstarHeader {
-        return @as(*const UstarHeader, &self.buffer);
+        return @as(*const UstarHeader, @ptrCast(&self.buffer));
     }
 
     pub fn asGnu(self: Header) *const GnuHeader {
-        return @as(*const GnuHeader, &self.buffer);
+        return @as(*const GnuHeader, @ptrCast(&self.buffer));
     }
 
     pub fn isUstar(self: Header) bool {
@@ -173,7 +173,7 @@ pub const Header = struct {
     }
 
     pub fn alignedEntrySize(self: Header) !u64 {
-        return std.mem.alignForwardGeneric(u64, try self.entrySize(), 512);
+        return std.mem.alignForward(u64, try self.entrySize(), 512);
     }
 
     pub fn realSize(self: Header) !u64 {
@@ -262,7 +262,7 @@ pub const Header = struct {
 };
 
 pub const Parser = struct {
-    allocator: *std.mem.Allocator,
+    allocator: std.mem.Allocator,
 
     file: std.fs.File,
     reader: std.fs.File.Reader,
@@ -274,7 +274,7 @@ pub const Parser = struct {
     last_longname: ?[]const u8 = null,
     last_longlink: ?[]const u8 = null,
 
-    pub fn init(allocator: *std.mem.Allocator, file: std.fs.File) Parser {
+    pub fn init(allocator: std.mem.Allocator, file: std.fs.File) Parser {
         return .{
             .allocator = allocator,
 
@@ -335,6 +335,7 @@ pub const Parser = struct {
         self.string_buffer.items.len += len;
 
         var buf = self.string_buffer.items[prev_len..][0..len];
+        _ = &buf;
         _ = try reader.readAll(buf);
 
         return buf;
@@ -356,6 +357,7 @@ pub const Parser = struct {
         try self.seekTo(self.start_offset + header.local_header.offset);
 
         var buffer = try allocator.alloc(header.uncompressed_size);
+        _ = &buffer;
         errdefer allocator.free(buffer);
 
         var read_buffered = std.io.BufferedReader(8192, std.fs.File.Reader){ .unbuffered_reader = self.reader };
