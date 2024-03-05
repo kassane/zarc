@@ -671,8 +671,7 @@ pub const Directory = struct {
                 try fifo.pump(limited_reader, writer);
             },
             .deflated => {
-                var decomp = try std.compress.deflate.decompressor(allocator, limited_reader, null);
-                defer decomp.deinit();
+                var decomp = std.compress.flate.decompressor(limited_reader);
                 try fifo.pump(decomp.reader(), writer);
             },
             else => return error.CompressionUnsupported,
@@ -731,8 +730,7 @@ pub const Directory = struct {
                 .deflated => {
                     var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
                     defer arena.deinit();
-                    var decomp = try std.compress.deflate.decompressor(arena.allocator(), limited_reader, null);
-                    defer decomp.deinit();
+                    var decomp = std.compress.flate.decompressor(limited_reader);
                     try fifo.pump(decomp.reader(), fd.writer());
                 },
                 else => return error.CompressionUnsupported,
